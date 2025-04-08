@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Today's Learning{% endblock %}
+
+{% block content %}
+<div
+    class="mx-8 rounded-xl px-8 py-2 opacity-80 hover:opacity-100 shadow-xl mb-4 bg-white flex gap-4 justify-between text-right px-16">
+    <div class="flex gap-8 items-center">
+        <a href="{% url 'problem_list' %}">
+            < Back to All Problems</a>
+                <p class="font-bold text-sm text-gray-600">REVISION PANNEL</p>
+    </div>
+    <div class="flex gap-8 items-center">
+        I understand the importance and I will surely revise later
+        <form method="post" action="{% url 'skip_revision' %}">
+            {% csrf_token %}
+            <button type="submit" class="bg-gray-900 px-4 py-2 text-gray-100 rounded">I will revise later</button>
+        </form>
+    </div>
+</div>
+<div class="mx-8 rounded-xl shadow-xl min-h-96 bg-gray-200 py-8 px-8 pb-8">
+    
+    <div class="flex gap-4">
+        <div class="w-1/6"></div>
+        <ul class="flex gap-16 flex-col">
+            {% for revision in revisions %}
+            <div class="bg-white py-16 px-8 rounded-xl">
+                <li class="p-4 px-16 flex justify-between">
+                    <div class="flex gap-6 items-center">
+                        <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                            alt="" class="w-12 h-12 rounded-full">
+                            <div>
+                                <a href="{{ revision.problem.url }}" target="_blank" class="font-bold capitalize">{{ revision.problem.title }}</a>
+                                <p class="text-sm text-gray-500">{{revision.revision_date}}</p>
+                            </div>
+                        
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="" class="bg-blue-900 text-gray-100 px-4 py-1 h-6 text-xs">DSA</a>
+                        <a href="" class="bg-purple-900 text-gray-100 px-4 py-1 h-6 text-xs">CP</a>
+                    </div>
+                    
+                </li>
+                <div class="px-16 py-2 leading-8 text-md">{{ revision.long_notes|safe }}</div>
+                <div class="px-16 py-2 flex justify-end">
+                    <p class="bg-black rounded-full px-4 py-2 text-gray-100 shadow-xl">
+                        <a href="{% url 'mark_revision_complete' revision.problem.id %}">Mark Revised</a>
+                    </p>
+                </div>
+            </div>
+            {% empty %}
+            <li class="text-center p-8">No problems to revise today.</li>
+            {% endfor %}
+        </ul>
+        <div class="w-1/6"></div>
+    </div>
+</div>
+{% endblock %}

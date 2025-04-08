@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <div class="flex p-8 bg-gray-100 h-screen">
+        <div class="flex justify-center w-1/2">
+            <div class="bg-white w-full p-8 pl-16 flex flex-col justify-center">
+                <div class="flex gap-4">
+                    <img src="https://img.icons8.com/?size=100&id=16555&format=png&color=555555" alt="" class="w-8">
+                    <h2 class="font-bold text-blue-700 text-2xl font-mono">ReviseWise | Login</h2>
+                </div>
+
+                {% if messages %}
+                {% for message in messages %}
+                <p style="color: red;">{{ message }}</p>
+                {% endfor %}
+                {% endif %}
+
+                <div class="my-16">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="flex flex-col ">
+                            <label class="text-gray-600 text-sm">USERNAME</label><br>
+                            <input type="text" name="username" required class="border-b-2 w-3/4 p-2">
+                        </div>
+
+                        <div class="my-8 flex flex-col">
+                            <label class="text-gray-600 text-sm ">PASSWORD</label><br>
+                            <input type="password" name="password" required class="border-b-2 w-3/4 p-2">
+                        </div>
+
+
+                        <button type="submit"
+                            class="bg-gradient-to-r from-blue-700 to-violet-700 rounded-3xl px-4 py-2 w-1/4 text-gray-100">Login</button>
+                    </form>
+                </div>
+
+                <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+            </div>
+        </div>
+
+        <div class="w-1/2 overflow-hidden h-screen">
+            <img src="https://images.unsplash.com/photo-1617791160536-598cf32026fb?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt="" class="scale-[1.56]">
+        </div>
+    </div>
+
+</body>
+
+</html>

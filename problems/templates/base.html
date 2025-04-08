@@ -1,0 +1,48 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Recall App{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen relative">
+    <div class="flex justify-between py-4 shadow-xl fixed w-full px-8 bg-gray-100">
+        <div class="flex gap-4">
+            <img src="https://img.icons8.com/?size=100&id=16555&format=png&color=555555" alt="" class="w-4 h-4">
+            <h2 class="font-bold text-gray-500 text-sm font-mono">ReviseWise | Login</h2>
+        </div>
+
+        <div class="flex gap-8">
+            <a href="{% url 'problem_list' %}"
+                class="{% if request.path == '/' %}text-gray-600 pb-1 font-semibold border-b-2 border-blue-200{% else %}text-gray-600{% endif %}">
+                My Problems
+            </a>
+            <a href="{% url 'revision_queue' %}"
+                class="{% if request.path == '/revision/' %}text-gray-600 pb-1 font-semibold border-b-2 border-blue-200{% else %}text-gray-600{% endif %}">
+                Revision Panel
+            </a>
+        </div>
+
+
+        <div class="flex gap-4">
+            {% if user.is_authenticated %}
+            Logged in as {{ user.username }} |
+            <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+
+            <img src="https://images.unsplash.com/photo-1594751439417-df8aab2a0c11?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt="" class="w-8 rounded-3xl">
+        </div>
+    </div>
+    <div class="pt-24">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+
+</html>
