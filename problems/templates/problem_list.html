@@ -3,6 +3,8 @@
 {% block title %}Today's Learning{% endblock %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 <div class="mx-8 rounded-xl p-8 shadow-xl mb-4 bg-white flex gap-4 justify-between text-right px-16">
     <div>
@@ -30,8 +32,8 @@
     </div>
 
 </div>
-
-<div class="mx-8 rounded-xl shadow-xl min-h-96 bg-white p-2">
+<div class="flex gap-4">
+<div class="ml-8 w-3/4 rounded-xl shadow-xl min-h-96 bg-white p-2">
 
     <div class="flex justify-between bg-gradient-to-r from-blue-100 to-gray-100 rounded-xl bg-opacity-20 py-2 px-8">
         <h1 class="font-bold">Active Topics</h1>
@@ -41,25 +43,48 @@
     <div class="my-8 px-8 max-h-80 overflow-y-scroll">
         <ul class="flex flex-col">
             <li class="flex gap-8 justify-between text-left text-sm text-gray-500 border-b-2 py-4">
-                <p class="w-1/6">Status</p>
-                <p class="w-full text-left">Topic</p>
-                <p class="w-1/2">Description</p>
+                <p class="w-1/6">Topic</p>
+                
                 <p>Edit</p>
             </li>
             {% for problem in problems %}
             <li class="flex gap-8 justify-between border-b-2 py-4">
-                <div class="w-1/6 border-r-2"> <form method="post" action="{% url 'toggle_complete' problem.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    {% if problem.hasCompleted%}
-                    <input type="checkbox" name="hasCompleted" onchange="this.form.submit()" checked class="w-4 h-4">
-                    {% else %}
-                    <input type="checkbox" name="hasCompleted" onchange="this.form.submit()" class="w-4 h-4">
-                    {% endif %}
+                <div class="flex gap-16">
+                    <div class="">
+                        <form method="post" action="{% url 'toggle_complete' problem.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            {% if problem.hasCompleted%}
+                            <input type="checkbox" name="hasCompleted" onchange="this.form.submit()" checked class="w-4 h-4">
+                            {% else %}
+                            <input type="checkbox" name="hasCompleted" onchange="this.form.submit()" class="w-4 h-4">
+                            {% endif %}
+                    
+                        </form>
+                    </div>
+                    
+                    <a href="{{ problem.url }}" target="_blank" class="w-full">
+                        <p class="text-left">{{ problem.title }}</p>
+                    </a>
 
-                </form></div>
-               
-                <a href="{{ problem.url }}" target="_blank" class="w-full"><p class="text-left">{{ problem.title }}</p></a>
-                <p class="w-1/2 h-4 overflow-hidden">{{problem.note}}</p>
+                </div>
+                
+                <div class="flex gap-4">
+                <div class="flex gap-2">
+                    {% for tag in problem.tag_list %}
+                    <span class="bg-gray-200 px-2 py-1 rounded text-sm text-gray-800">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+
+                <div>
+                {% if problem.difficulty == "Easy" %}
+                <p class="overflow-hidden bg-green-100 px-2 py-1 rounded">{{ problem.difficulty }}</p>
+                {% elif problem.difficulty == "Medium" %}
+                <p class="overflow-hidden bg-yellow-200 px-2 py-1 rounded">{{ problem.difficulty }}</p>
+                {% else %}
+                <p class="overflow-hidden bg-red-200 px-2 py-1 rounded">{{ problem.difficulty }}</p>
+                {% endif %}
+                </div>
+
                 <a href="{% url 'edit_problem' problem.id %}">
                     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 64 64">
                         <path
@@ -67,6 +92,17 @@
                         </path>
                     </svg>
                 </a>
+                <a href="{% url 'delete_problem' problem.id %}" class="text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 50 50">
+                        <path
+                            d="M 21.800781 10.099609 C 20.916781 10.099609 20.199219 10.815219 20.199219 11.699219 L 20.199219 12.099609 L 9.8007812 12.099609 C 9.5247813 12.099609 9.3007812 12.323609 9.3007812 12.599609 C 9.3007812 12.875609 9.5247813 13.099609 9.8007812 13.099609 L 11.740234 13.099609 L 13.857422 38.507812 C 14.017422 40.410812 15.636922 41.900391 17.544922 41.900391 L 32.455078 41.900391 C 34.363078 41.900391 35.982625 40.410812 36.140625 38.507812 L 38.257812 13.099609 L 40.199219 13.099609 C 40.476219 13.099609 40.699219 12.875609 40.699219 12.599609 C 40.699219 12.323609 40.475219 12.099609 40.199219 12.099609 L 29.800781 12.099609 L 29.800781 11.699219 C 29.800781 10.815219 29.083219 10.099609 28.199219 10.099609 L 21.800781 10.099609 z M 12.742188 13.099609 L 37.255859 13.099609 L 35.144531 38.423828 C 35.028531 39.812828 33.848078 40.900391 32.455078 40.900391 L 17.542969 40.900391 C 16.150969 40.900391 14.969516 39.811828 14.853516 38.423828 L 12.742188 13.099609 z">
+                        </path>
+                    </svg>
+                </a>
+
+                </div>
+
+                
             </li>
             {% empty %}
             <li>No problems yet.</li>
@@ -101,6 +137,13 @@
                         </path>
                     </svg>
                 </a>
+                <a href="{% url 'delete_problem' problem.id %}" class="text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="20" height="20" viewBox="0 0 50 50">
+                        <path
+                            d="M 21.800781 10.099609 C 20.916781 10.099609 20.199219 10.815219 20.199219 11.699219 L 20.199219 12.099609 L 9.8007812 12.099609 C 9.5247813 12.099609 9.3007812 12.323609 9.3007812 12.599609 C 9.3007812 12.875609 9.5247813 13.099609 9.8007812 13.099609 L 11.740234 13.099609 L 13.857422 38.507812 C 14.017422 40.410812 15.636922 41.900391 17.544922 41.900391 L 32.455078 41.900391 C 34.363078 41.900391 35.982625 40.410812 36.140625 38.507812 L 38.257812 13.099609 L 40.199219 13.099609 C 40.476219 13.099609 40.699219 12.875609 40.699219 12.599609 C 40.699219 12.323609 40.475219 12.099609 40.199219 12.099609 L 29.800781 12.099609 L 29.800781 11.699219 C 29.800781 10.815219 29.083219 10.099609 28.199219 10.099609 L 21.800781 10.099609 z M 12.742188 13.099609 L 37.255859 13.099609 L 35.144531 38.423828 C 35.028531 39.812828 33.848078 40.900391 32.455078 40.900391 L 17.542969 40.900391 C 16.150969 40.900391 14.969516 39.811828 14.853516 38.423828 L 12.742188 13.099609 z">
+                        </path>
+                    </svg>
+                </a>
             </li>
             {% empty %}
             <li>No problems yet.</li>
@@ -110,5 +153,70 @@
     
 
 </div>
+<div class="mr-8 w-1/4 rounded-xl shadow-xl min-h-96 bg-gradient-to-b from-blue-100 to-purple-100 p-2 pt-8">
+    <p class="w-full font-bold text-center">ANALYTICAL SUMMARY</p>
+    <div class="mb-4">
+        <div class="mb-4 w-full pt-8 px-12">
+            <canvas id="difficultyChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="my-4 pt-8 px-4">
+        <h2 class="font-semibold text-lg my-4">Topics Completed</h2>
+        <ul class="flex flex-wrap gap-2">
+            {% for tag, count in tag_counts.items %}
+            <li>
+                <div class="bg-gray-100 bg-opacity-75 px-2 py-2 rounded text-sm flex gap-8 justify-between items-center">
+                <p class="h-6 p-1 uppercase">{{ tag }}</p>
+                <p class="w-6 h-6 text-center font-bold rounded-full p-1 bg-blue-200 text-gray-600 flex items-center justify-center">{{ count }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+</div>
+
+<script>
+    const difficultyData = {
+        labels: ['Easy', 'Medium', 'Hard'],
+        datasets: [{
+            label: 'Completed Problems',
+            data: [
+                {{ difficulty_counts.easy }},
+        {{ difficulty_counts.medium }},
+        {{ difficulty_counts.hard }}
+            ],
+    backgroundColor: ['#bbf7d0', '#fde68a', '#fecaca'],
+        borderColor: ['#86efac', '#facc15', '#f87171'],
+            borderWidth: 1
+        }]
+    };
+
+    const config = {
+        type: 'doughnut',
+        data: difficultyData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: false
+                }
+            }
+        }
+    };
+
+    const difficultyChart = new Chart(
+        document.getElementById('difficultyChart'),
+        config
+    );
+</script>
+
+
 
 {% endblock %}

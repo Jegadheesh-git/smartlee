@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Problem, RevisionSchedule
+from .models import Problem, RevisionSchedule, DailyRevision
 from django.utils import timezone
 from datetime import timedelta, date
 from django.views.decorators.http import require_POST
@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.utils.timezone import localdate
 from django.db.models import Count, Q
+from django.http import HttpResponse
+from collections import defaultdict, Counter
 
 import requests
 from bs4 import BeautifulSoup
@@ -163,12 +165,31 @@ def problem_list(request):
         completed_at__date=localdate()
     ).count()
 
-    # Pending Recalls (RevisionSchedule entries for today, not completed)
+    # Pending Recalls
     pending_recalls = RevisionSchedule.objects.filter(
         user=user,
         revision_date=localdate(),
         is_completed=False
     ).count()
+
+    # === Difficulty count ===
+    difficulty_counts = Counter()
+    tag_counts = Counter()
+
+    for problem in completed_problems:
+        # Count by difficulty
+        if problem.difficulty:
+            difficulty_counts[problem.difficulty.strip().lower()] += 1
+
+        # Count by tags
+        if problem.tags:
+            tags = [tag.strip().lower() for tag in problem.tags.split(',') if tag.strip()]
+            tag_counts.update(tags)
+
+    # Ensure keys for 'easy', 'medium', 'hard' are always present
+    for key in ['easy', 'medium', 'hard']:
+        if key not in difficulty_counts:
+            difficulty_counts[key] = 0
 
     context = {
         'problems': problems,
@@ -179,7 +200,9 @@ def problem_list(request):
             'total_topics': total_topics,
             'completed_today': completed_today,
             'pending_recalls': pending_recalls,
-        }
+        },
+        'difficulty_counts': dict(difficulty_counts),  # Always includes 'easy', 'medium', 'hard'
+        'tag_counts': dict(tag_counts),
     }
 
     return render(request, 'problem_list.html', context)
@@ -204,7 +227,7 @@ def toggle_complete(request, pk):
             summary = generate_summary(problem.title, problem.url)
 
             # Create spaced repetition schedule
-            intervals = [1, 2, 4, 7, 15]
+            intervals = [1, 2, 3, 4, 7, 9, 12, 15, 5, 5, 5, 5, 5, 5]
             for i in intervals:
                 RevisionSchedule.objects.create(
                     problem=problem,
@@ -234,7 +257,17 @@ def add_problem(request):
         title = request.POST.get('title')
         url = request.POST.get('url')
         notes = request.POST.get('notes', '')
-        problem = Problem.objects.create(title=title, url=url, notes=notes, user=request.user,)
+        tags = request.POST.get('tags', '')  # get tags string
+        difficulty = request.POST.get('difficulty', 'Medium')  # default to Medium
+
+        problem = Problem.objects.create(
+            title=title,
+            url=url,
+            notes=notes,
+            tags=tags,
+            difficulty=difficulty,
+            user=request.user
+        )
         return redirect('problem_list')
     return render(request, 'add_problem.html')
 
@@ -292,7 +325,9 @@ def revision_queue(request):
             latest_revision_entries.append(revision)  # Add the revision itself
             seen_problems.add(revision.problem_id)
 
-    return render(request, 'revision_queue.html', {'revisions': latest_revision_entries})
+    due_revisions = DailyRevision.objects.filter(user=request.user, last_revised_date__lt=timezone.now().date())
+
+    return render(request, 'revision_queue.html', {'revisions': latest_revision_entries, 'due_revisions': due_revisions})
 
 
 def mark_revision_complete(request, pk):
@@ -303,3 +338,67 @@ def mark_revision_complete(request, pk):
         rev.is_completed = True
         rev.save()
     return redirect('revision_queue')
+
+@login_required
+def daily_revision_list(request):
+    due_revisions = DailyRevision.objects.filter(user=request.user, last_revised_date__lt=timezone.now().date())
+    return render(request, 'revision_list.html', {'revisions': due_revisions})
+
+@login_required
+def create_daily_revision(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        url = request.POST.get('url')
+        description = request.POST.get('description')
+        image_url = request.POST.get('image_url')
+
+        DailyRevision.objects.create(
+            user=request.user,
+            title=title,
+            url=url,
+            description=description,
+            image_url=image_url
+        )
+        return redirect('revision_queue')
+
+    return render(request, 'create_revision.html')
+
+@login_required
+def mark_as_revised(request, id):
+    print("method:", request.method)
+    print("updayed")
+    revision = DailyRevision.objects.get(id=id, user=request.user)
+    revision.last_revised_date = timezone.now().date()
+    revision.save()
+    return redirect('revision_queue')
+
+@login_required
+def delete_problem(request, pk):
+    problem = get_object_or_404(Problem, pk=pk, user=request.user)
+    if request.method == 'POST':
+        problem.delete()
+        return redirect('problem_list')  # update redirect as needed
+    return render(request, 'confirm_delete.html', {'object': problem, 'type': 'Problem'})
+
+@login_required
+def delete_dailyrevision(request, pk):
+    revision = get_object_or_404(DailyRevision, pk=pk, user=request.user)
+    if request.method == 'POST':
+        revision.delete()
+        return redirect('revision_queue')
+    return render(request, 'confirm_delete.html', {'object': revision, 'type': 'Daily Revision'})
+
+@login_required
+def edit_dailyrevision(request, pk):
+    revision = get_object_or_404(DailyRevision, pk=pk, user=request.user)
+
+    if request.method == 'POST':
+        revision.title = request.POST.get('title', revision.title)
+        revision.url = request.POST.get('url', revision.url)
+        revision.description = request.POST.get('description', revision.description)
+        revision.image_url = request.POST.get('image_url', revision.image_url)
+        revision.last_revised_date = request.POST.get('last_revised_date', revision.last_revised_date)
+        revision.save()
+        return redirect('revision_queue')
+
+    return render(request, 'edit_dailyrevision.html', {'revision': revision})

@@ -21,8 +21,62 @@
 <div class="mx-8 rounded-xl shadow-xl min-h-96 bg-gray-200 py-8 px-8 pb-8">
     
     <div class="flex gap-4">
-        <div class="w-1/6"></div>
+        <div class="w-2/6"></div>
+        <div class="w-4/6">
+            <div class="bg-white py-4 px-8 mb-4 rounded-xl flex justify-between">
+                <p>Do you want to add any topic to daily recap?</p>
+                <a href="{% url 'create_daily_revision' %}"><p class="rounded-full border-2 border-purple-500 px-4 text-purple-500">Create New</p></a>
+            </div>
         <ul class="flex gap-16 flex-col">
+            
+            {% for rev in due_revisions %}
+            <div class="bg-white py-16 px-8 rounded-xl">
+                <li class="p-4 px-16 flex justify-between">
+                    <div class="flex gap-6 items-center">
+                        <img src="https://images.unsplash.com/photo-1469594292607-7bd90f8d3ba4?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTM2fHxibHVlfGVufDB8fDB8fHww"
+                            alt="" class="w-12 h-12 rounded-full">
+                        <div>
+                            <a href="{{ rev.url }}" target="_blank" class="font-bold capitalize">
+                                {{rev.title}}</a>
+                            <p class="text-sm text-gray-500">{{rev.revision_date}}</p>
+                        </div>
+            
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="" class="bg-blue-900 text-gray-100 px-4 py-1 h-6 text-xs">Daily</a>
+                        <a href="" class="bg-purple-900 text-gray-100 px-4 py-1 h-6 text-xs">Recap</a>
+                        
+                    </div>
+            
+                </li>
+                <div class="px-16 py-2 leading-8 text-md">{{ rev.description|safe }}</div>
+
+                {% if rev.image_url %}
+                <img src="{{ rev.image_url }}" alt="" class=" px-32 py-24 object-cover">
+                {% else %}
+                
+                {% endif %}
+
+
+                <div class="px-16 py-2 flex justify-end">
+
+                        <a href="{% url 'edit_dailyrevision' rev.id %}" class="flex py-2 mt-2 mr-4"><svg fill="#000000" width="20px" height="20px" viewBox="-8.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                            <title>options</title>
+                            <path
+                                d="M5.88 15h-5.040c-0.48 0-0.84-0.36-0.84-0.84v-5.040c0-0.48 0.36-0.84 0.84-0.84h5.040c0.48 0 0.84 0.36 0.84 0.84v5.040c0 0.44-0.4 0.84-0.84 0.84zM1.68 13.32h3.36v-3.36h-3.36v3.36zM14.6 15h-5.040c-0.48 0-0.84-0.36-0.84-0.84v-5.040c0-0.48 0.36-0.84 0.84-0.84h5.040c0.48 0 0.84 0.36 0.84 0.84v5.040c0 0.44-0.4 0.84-0.84 0.84zM10.4 13.32h3.36v-3.36h-3.36c0 0 0 3.36 0 3.36zM5.88 23.72h-5.040c-0.48 0-0.84-0.36-0.84-0.84v-5.040c0-0.48 0.36-0.84 0.84-0.84h5.040c0.48 0 0.84 0.36 0.84 0.84v5.040c0 0.48-0.4 0.84-0.84 0.84zM1.68 22.040h3.36v-3.36h-3.36v3.36zM14.6 23.72h-5.040c-0.48 0-0.84-0.36-0.84-0.84v-5.040c0-0.48 0.36-0.84 0.84-0.84h5.040c0.48 0 0.84 0.36 0.84 0.84v5.040c0 0.48-0.4 0.84-0.84 0.84zM10.4 22.040h3.36v-3.36h-3.36c0 0 0 3.36 0 3.36z">
+                            </path>
+                        </svg> More Options</a>
+                    
+                        <form method="POST" action="{% url 'mark_as_revised' rev.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-black rounded-full px-4 py-2 mt-2 text-gray-100 shadow-xl" onclick="console.log('Submitting form')">Mark as Revised</button>
+                        </form>
+                    
+                </div>
+            </div>
+            
+            {% endfor %}
+
             {% for revision in revisions %}
             <div class="bg-white py-16 px-8 rounded-xl">
                 <li class="p-4 px-16 flex justify-between">
@@ -52,7 +106,25 @@
             <li class="text-center p-8">No problems to revise today.</li>
             {% endfor %}
         </ul>
-        <div class="w-1/6"></div>
+        </div>
+        <div class="w-2/6 ml-4">
+            <div class="bg-white rounded-xl p-8 min-h-36">
+                <p class="font-bold w-full text-center">QUIZ PANNEL (Coming Soon!)</p>
+                <div class="flex flex-col p-4 gap-8">
+                    {% if not revisions and not due_revisions %}
+                    <p class="bg-gradient-to-r from-blue-800 to-purple-800 rounded-full text-white text-center p-2 w-3/4 cursor-pointer shadow-xl">🎉 Take Quiz!</p>
+                    {% else %}
+                    <div class="flex justify-center">
+                    <p class="bg-gray-100 rounded-full text-gray-500 font-bold text-center p-2 w-3/4 cursor-not-allowed shadow-xl">Quiz Locked 🔒</p>
+                    </div>
+                    <div class="flex justify-center">
+                    <p class="text-center w-3/4">Completed all Today's revision to unlock quiz</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

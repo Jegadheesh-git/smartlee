@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Today's Learning{% endblock %}
+
+{% block content %}
+
+<div class="flex justify-evenly">
+    <div class="w-1/2 bg-white rounded-xl shadow-xl p-16 flex flex-col gap-8">
+        <div class="flex gap-4">
+            <a href="{% url 'problem_list' %}" class="text-sm text-gray-500">
+                < Back</a>
+                    <h1 class="font-bold uppercase">Create Daily Revision Topic</h1>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="title" placeholder="Title" required class="px-4 py-2 border-b-2 w-5/6"><br><br>
+            <input type="url" name="url" placeholder="URL" required class="px-4 py-2 border-b-2 w-5/6"><br><br>
+            <textarea name="description" placeholder="Notes" class="px-4 py-2 border-b-2 w-5/6"></textarea><br><br>
+            <input type="url" name="image_url" placeholder="Image URL (Optional)" class="px-4 py-2 border-b-2 w-5/6"><br><br>
+
+
+            <button type="submit" class="bg-black text-gray-100 px-4 py-2 shadow-md rounded-xl">Save Revision</button>
+
+        </form>
+
+    </div>
+</div>
+
+
+{% endblock %}
